@@ -3,3 +3,4 @@ pyautogui
 datetime
 pillow
 pynput
+pywhatkit

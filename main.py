@@ -4,6 +4,7 @@ from pathlib import Path
 import easyocr
 import time
 from screenshot import get_screenshot
+from email_sender import send_email
 
 # Working Recent File Fetcher
 # folder_path = r"./Screenshots/"
@@ -27,8 +28,8 @@ while True:
 
     new_words = [word for word in current_words if word not in previous_words]
     if new_words:
+        send_email(str(new_words))
         print("New words detected:")
         for word in new_words:
             print(word)
-
-    previous_words = current_words
+        previous_words = current_words
