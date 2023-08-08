@@ -9,8 +9,8 @@ from keys import email_sender,email_password,email_receiver
 
 
 def send_email(text):
-    subject = "Buy and Sell"
-    body = text
+    subject = "Buy"
+    body = str(text)
     em = EmailMessage()
     em['From'] = email_sender
     em['To'] = email_receiver
