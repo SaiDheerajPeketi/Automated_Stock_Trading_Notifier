@@ -1,12 +1,17 @@
-from datetime import datetime
 from PIL import ImageGrab
+import time
 
-def get_screenshot():
-    # now = datetime.now()
-    # now = now.strftime("%d-%m-%Y %H-%M-%S")
-    # ss_region = (300, 300, 600, 600)
-    # myScreenshot = ImageGrab.grab(ss_region)
-    # myScreenshot.save("./Screenshots/"+now+".png")
-    ss_region = (251, 236, 449, 640)
+def get_stocks():
+    ss_region = (600, 300, 820, 729)
     myScreenshot = ImageGrab.grab(ss_region)
-    myScreenshot.save("screen.png")
+    myScreenshot.save("stocks.png")
+
+def get_prices():
+    ss_region = (1024, 300, 1117, 730)
+    myScreenshot = ImageGrab.grab(ss_region)
+    myScreenshot.save("prices.png")
+
+# if __name__=="__main__":
+#     time.sleep(5)
+#     get_stocks()
+#     get_prices()

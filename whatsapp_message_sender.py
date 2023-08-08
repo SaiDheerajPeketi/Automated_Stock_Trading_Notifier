@@ -1,3 +1,4 @@
 import pywhatkit
+from keys import mobile_number
 while True:
-    pywhatkit.sendwhatmsg_instantly("+918499922062","Hello",7,True,1)
+    pywhatkit.sendwhatmsg_instantly(mobile_number,"Hello",7,True,1)

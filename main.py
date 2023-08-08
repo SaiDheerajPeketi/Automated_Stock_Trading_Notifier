@@ -14,7 +14,6 @@ from email_sender import send_email
 # recent_file = open(recent_file)
 
 reader = easyocr.Reader(['en'])
-
 previous_words = []
 
 while True:
