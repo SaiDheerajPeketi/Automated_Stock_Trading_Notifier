@@ -2,3 +2,4 @@ easyocr
 pyautogui
 datetime
 pillow
+pynput
