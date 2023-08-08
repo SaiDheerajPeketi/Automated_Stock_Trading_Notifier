@@ -1,0 +1,4 @@
+easyocr
+pyautogui
+datetime
+pillow
