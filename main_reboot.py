@@ -4,6 +4,8 @@ import time
 from keys import lower_threshold, upper_threshold
 from classes import Stock
 from email_sender import send_email
+from store import write_lists
+import threading
 
 curr_stocks = []
 curr_prices = []
@@ -28,13 +30,14 @@ try:
         raise Exception("Stocks size is not equal to Price size")
     for i in range(0, len(prev_stocks)):
         prev_stocks[i] = "".join(char if char.isalpha() or char.isspace() else "" for char in prev_stocks[i])
-except:
-    print("Failed to fill Previous Stocks")
+except Exception as e:
+    print("Failed to fill Previous Stocks ", e)
 
 while True:
     # time.sleep(5)
     get_stocks()
     get_prices()
+
     stocks = reader.readtext("stocks.png")
     prices = reader.readtext("prices.png")
     curr_stocks = []
@@ -54,7 +57,6 @@ while True:
 
     try:
         try:
-
             combined_stocks = set(curr_stocks + prev_stocks)
             for i in range(0, len(curr_stocks)):
                 try:
@@ -72,6 +74,11 @@ while True:
                             continue
 
                         print(f"BUY {item} at {curr_price}")
+                        out_list = [str(time.strftime("%Y-%m-%d %H:%M:%S")), "BUY", str(item), str(curr_price),
+                                    str(curr_price)]
+                        # thread = threading.Thread(target=out_list, args=(out_list))
+                        # thread.start()
+                        write_lists(out_list)
                         holdings.append((item, curr_price, curr_price))
                         new_stocks.append(item)
 
@@ -85,17 +92,22 @@ while True:
                         if (curr_price - prev_price <= lower_threshold) or (
                                 curr_price - prev_price >= upper_threshold) or item not in curr_stocks:
                             print(f"SELL {item} at {curr_price}")
+                            out_list = [str(time.strftime("%Y-%m-%d %H:%M:%S")), "SELL", str(item),
+                                        str(holdings[holding_index][1]), str(curr_price)]
+                            write_lists(out_list)
+                            # thread = threading.Thread(target=out_list, args=(out_list))
+                            # thread.start()
                             holdings.pop(holding_index)
                             # del holdings[holding_index]
                         else:
                             # print(curr_stocks)
                             holdings[holding_index] = (
-                            holdings[holding_index][0], holdings[holding_index][1], curr_price)
+                                holdings[holding_index][0], holdings[holding_index][1], curr_price)
                 except Exception as e:
                     print("Buy Sell Conditions", e)
                     continue
         except Exception as e:
-            print("Buy Sell and Get Holdings ",e)
+            print("Buy Sell and Get Holdings ", e)
             continue
         try:
             modified = []
@@ -103,6 +115,11 @@ while True:
                 stock = holdings[i][0]
                 if stock not in curr_stocks:
                     print(f"SELL {stock} at {lower_threshold}")
+                    out_list = [str(time.strftime("%Y-%m-%d %H:%M:%S")), "SELL", str(item),
+                                str(holdings[holding_index][1]), str(lower_threshold)]
+                    write_lists(out_list)
+                    # thread = threading.Thread(target=out_list, args=(out_list))
+                    # thread.start()
                     modified.append(stock)
             for stock in modified:
                 curr_holdings = [item[0] for item in holdings]
