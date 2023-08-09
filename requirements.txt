@@ -4,4 +4,4 @@ datetime
 pillow
 pynput
 pywhatkit
-csv
+python-telegram-bot
