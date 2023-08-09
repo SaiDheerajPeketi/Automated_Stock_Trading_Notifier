@@ -39,6 +39,10 @@ Run the program
   cursor_position.py (once)
 ```
 
+- Adjust the trading thresholds (lower_threshold and upper_threshold) in keys.py.
+
+- Configure email and Telegram bot API details in keys.py for notifications.
+
 ```bash
   main.py
 ```
@@ -46,3 +50,7 @@ Run the program
 ## Disclaimer
 
 Please note that the Automated Stock Trading Notifier is for educational and informational purposes only. Use this program responsibly and make trading decisions based on thorough research and analysis.
+## Contributing
+
+Contributions to this project are welcome! If you find any bugs or have suggestions for improvements, please open an issue or submit a pull request.
+
