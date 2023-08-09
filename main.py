@@ -1,81 +1,136 @@
-import os
-import glob
-from pathlib import Path
 import easyocr
-import time
-import csv  # Import the csv module
 from screenshot import get_stocks, get_prices
+import time
+from keys import lower_threshold, upper_threshold
 from email_sender import send_email
-from classes import Stock
+from store import write_lists
+import threading
+
+curr_stocks = []
+curr_prices = []
+prev_stocks = []
+prev_prices = []
+holdings = []
 
 reader = easyocr.Reader(['en'])
-previous_stocks = {}
-holdings = {}
 
-# Open the CSV file in write mode and create a CSV writer
-with open("transactions.csv", "w", newline="") as csv_file:
-    csv_writer = csv.writer(csv_file)
-    csv_writer.writerow(["Timestamp", "Operation", "Stock"])
+# time.sleep(5)
+new_stocks = []
+get_stocks()
+get_prices()
+stocks = reader.readtext("stocks.png")
+prices = reader.readtext("prices.png")
+try:
+    for item in stocks:
+        prev_stocks.append(item[1])
+    for item in prices:
+        prev_prices.append(float(item[1]))
+    if len(prices) != len(stocks):
+        raise Exception("Stocks size is not equal to Price size")
+    for i in range(0, len(prev_stocks)):
+        prev_stocks[i] = "".join(char if char.isalpha() or char.isspace() else "" for char in prev_stocks[i])
+except Exception as e:
+    print("Failed to fill Previous Stocks ", e)
 
-    while True:
-        # time.sleep(5)
-        get_stocks()
-        get_prices()
-        start_time = time.time()
-        stocks = reader.readtext("stocks.png")
-        prices = reader.readtext("prices.png")
+while True:
+    # time.sleep(5)
+    get_stocks()
+    get_prices()
 
-        curr_stocks = {}
+    stocks = reader.readtext("stocks.png")
+    prices = reader.readtext("prices.png")
+    curr_stocks = []
+    curr_prices = []
+    try:
+        for item in stocks:
+            curr_stocks.append(item[1])
+        for i in range(0, len(curr_stocks)):
+            curr_stocks[i] = "".join(char if char.isalpha() or char.isspace() else "" for char in curr_stocks[i])
+        for item in prices:
+            curr_prices.append(float(item[1]))
+        if len(prices) != len(stocks):
+            raise Exception("Stocks size is not equal to Price size")
+    except Exception as e:
+        print("Failed to fill current stocks ", e)
+        continue
+
+    try:
         try:
-            for i in range(len(stocks)):
-                stocks[i] = stocks[i][1]
-                prices[i] = float(prices[i][1])
-            for i in range(len(stocks)):
-                curr_stock = "".join(char if char.isalpha() or char.isspace() else "" for char in stocks[i])
-                curr_stocks[curr_stock] = prices[i]
-        except:
-            pass
+            combined_stocks = set(curr_stocks + prev_stocks)
+            for i in range(0, len(curr_stocks)):
+                try:
+                    item = curr_stocks[i]
+                    curr_holdings = [h[0] for h in holdings]
+                except Exception as e:
+                    print("Current Stocks Index ", e)
+                    continue
+                try:
+                    if item not in curr_holdings and item not in prev_stocks:
+                        try:
+                            curr_price = curr_prices[i]
+                        except Exception as e:
+                            print("Current Price Index ", e)
+                            continue
 
-        changed = []
-        for item in curr_stocks:
-            if item in holdings:
-                holding = holdings[item]
-                holding.set_curr_percent(curr_stocks[item])
-                if (holding.get_curr_percent() - holding.get_buy_percent()) <= -0.5 or (
-                        holding.get_curr_percent() - holding.get_buy_percent()) >= 1:
-                    print(f"SELL {item}")
-                    print("Profit/Loss:", holding.get_curr_percent() - holding.get_buy_percent())
-                    del holdings[item]
-                    # Write the sell operation to the CSV file
-                    csv_writer.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), "SELL", item])
-            if item in previous_stocks:
-                pass
-            else:
-                print(f"BUY {item}")
-                holdings[item] = (Stock(item, curr_stocks[item], curr_stocks[item]))
-                changed.append(item)
-                # Write the buy operation to the CSV file
-                csv_writer.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), "BUY", item])
-        next_holdings = {}
-        get_stocks()
-        get_prices()
-        # start_time = time.time()
-        stocks = reader.readtext("stocks.png")
-        prices = reader.readtext("prices.png")
-        for item in holdings:
-            if item not in curr_stocks:
-                holding = holdings[item]
-                print(f"SELL1 {item}")
-                print("Profit/Loss:", holding.get_curr_percent() - holding.get_buy_percent())
-                # Write the sell operation to the CSV file
-                csv_writer.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), "SELL", item])
-            else:
-                next_holdings[item] = holdings[item]
-        #     del holdings[item]
-        holdings = next_holdings
-        if len(changed) != 0:
-            send_email(changed)
-        previous_stocks = curr_stocks
-        curr_stocks = {}
-        print(previous_stocks)
-        print(holdings)
+                        print(f"BUY {item} at {curr_price}")
+                        out_list = [str(time.strftime("%Y-%m-%d %H:%M:%S")), "BUY", str(item), str(curr_price),
+                                    str(curr_price)]
+                        # thread = threading.Thread(target=out_list, args=(out_list))
+                        # thread.start()
+                        write_lists(out_list)
+                        holdings.append((item, curr_price, curr_price))
+                        new_stocks.append(item)
+
+                    if item in curr_holdings:
+                        # print("Done")
+                        holding_index = curr_holdings.index(item)
+                        prev_price = holdings[holding_index][1]
+                        curr_price = curr_prices[i]
+                        print(item)
+                        if (curr_price - prev_price <= lower_threshold) or (
+                                curr_price - prev_price >= upper_threshold) or item not in curr_stocks:
+                            print(f"SELL {item} at {curr_price}")
+                            out_list = [str(time.strftime("%Y-%m-%d %H:%M:%S")), "SELL", str(item),
+                                        str(holdings[holding_index][1]), str(curr_price)]
+                            write_lists(out_list)
+                            # thread = threading.Thread(target=out_list, args=(out_list))
+                            # thread.start()
+                            holdings.pop(holding_index)
+                            # del holdings[holding_index]
+                        else:
+                            # print(curr_stocks)
+                            holdings[holding_index] = (
+                                holdings[holding_index][0], holdings[holding_index][1], curr_price)
+                except Exception as e:
+                    print("Buy Sell Conditions", e)
+                    continue
+        except Exception as e:
+            print("Buy Sell and Get Holdings ", e)
+            continue
+        try:
+            modified = []
+            for i in range(0, len(holdings)):
+                stock = holdings[i][0]
+                if stock not in curr_stocks:
+                    print(f"SELL {stock} at {lower_threshold}")
+                    out_list = [str(time.strftime("%Y-%m-%d %H:%M:%S")), "SELL", str(item),
+                                str(holdings[holding_index][1]), str(lower_threshold)]
+                    write_lists(out_list)
+                    # thread = threading.Thread(target=out_list, args=(out_list))
+                    # thread.start()
+                    modified.append(stock)
+            for stock in modified:
+                curr_holdings = [item[0] for item in holdings]
+                index = curr_holdings.index(stock)
+                holdings.pop(index)
+            print(holdings)
+            prev_stocks = curr_stocks
+            prev_prices = curr_prices
+        except Exception as e:
+            print("Removing from Holdings ", e)
+            continue
+    except Exception as e:
+        print("Infinite While ", e)
+        continue
+    if len(modified) != 0 or len(new_stocks) != 0:
+        send_email(modified + new_stocks)
