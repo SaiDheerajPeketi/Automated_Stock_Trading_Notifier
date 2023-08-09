@@ -11,14 +11,11 @@ from classes import Stock
 reader = easyocr.Reader(['en'])
 previous_stocks = {}
 holdings = {}
-stop_loss_percent = -0.5
-target_percent = 1
-isFirst = False
 
 # Open the CSV file in write mode and create a CSV writer
 with open("transactions.csv", "w", newline="") as csv_file:
     csv_writer = csv.writer(csv_file)
-    #csv_writer.writerow(["Timestamp", "Operation", "Stock"])
+    csv_writer.writerow(["Timestamp", "Operation", "Stock"])
 
     while True:
         # time.sleep(5)
@@ -38,41 +35,47 @@ with open("transactions.csv", "w", newline="") as csv_file:
                 curr_stocks[curr_stock] = prices[i]
         except:
             pass
-        if not isFirst:
-            changed = []
-            for item in curr_stocks:
-                if item in holdings:
-                    holding = holdings[item]
-                    holding.set_curr_percent(curr_stocks[item])
-                    if (holding.get_curr_percent() - holding.get_buy_percent()) <= stop_loss_percent or (holding.get_curr_percent() - holding.get_buy_percent()) >= target_percent:
-                        print(f"SELL {item}")
-                        print("Profit/Loss:", holding.get_curr_percent() - holding.get_buy_percent())
-                        del holdings[item]
-                        # Write the sell operation to the CSV file
-                        csv_writer.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), "SELL", item])
-                if item in previous_stocks:
-                    pass
-                else:
-                    print(f"BUY {item}")
-                    holdings[item] = (Stock(item, curr_stocks[item], curr_stocks[item]))
-                    changed.append(item)
-                    # Write the buy operation to the CSV file
-                    csv_writer.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), "BUY", item])
-            next_holdings = {}
-            for item in holdings:
-                if item not in curr_stocks:
-                    holding = holdings[item]
+
+        changed = []
+        for item in curr_stocks:
+            if item in holdings:
+                holding = holdings[item]
+                holding.set_curr_percent(curr_stocks[item])
+                if (holding.get_curr_percent() - holding.get_buy_percent()) <= -0.5 or (
+                        holding.get_curr_percent() - holding.get_buy_percent()) >= 1:
                     print(f"SELL {item}")
                     print("Profit/Loss:", holding.get_curr_percent() - holding.get_buy_percent())
+                    del holdings[item]
                     # Write the sell operation to the CSV file
                     csv_writer.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), "SELL", item])
-                else:
-                    next_holdings[item] = holdings[item]
-            holdings = next_holdings
-            if len(changed) != 0:
-                send_email(changed)
-        isFirst = True
+            if item in previous_stocks:
+                pass
+            else:
+                print(f"BUY {item}")
+                holdings[item] = (Stock(item, curr_stocks[item], curr_stocks[item]))
+                changed.append(item)
+                # Write the buy operation to the CSV file
+                csv_writer.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), "BUY", item])
+        next_holdings = {}
+        get_stocks()
+        get_prices()
+        # start_time = time.time()
+        stocks = reader.readtext("stocks.png")
+        prices = reader.readtext("prices.png")
+        for item in holdings:
+            if item not in curr_stocks:
+                holding = holdings[item]
+                print(f"SELL1 {item}")
+                print("Profit/Loss:", holding.get_curr_percent() - holding.get_buy_percent())
+                # Write the sell operation to the CSV file
+                csv_writer.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), "SELL", item])
+            else:
+                next_holdings[item] = holdings[item]
+        #     del holdings[item]
+        holdings = next_holdings
+        if len(changed) != 0:
+            send_email(changed)
         previous_stocks = curr_stocks
         curr_stocks = {}
-        # print(previous_stocks)
-        # print(holdings)
+        print(previous_stocks)
+        print(holdings)
