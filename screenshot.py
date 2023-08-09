@@ -2,7 +2,7 @@ from PIL import ImageGrab
 import time
 
 def get_stocks():
-    ss_region = (600, 300, 820, 729)
+    ss_region = (650, 300, 820, 729)
     myScreenshot = ImageGrab.grab(ss_region)
     myScreenshot.save("stocks.png")
 
