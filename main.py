@@ -1,3 +1,5 @@
+# https://economictimes.indiatimes.com/marketstats/pid-1004,exchange-50,sortby-percentChange,sortorder-desc,indexid-13602,company-true,indexname-Nifty%20200.cms
+
 import easyocr
 from screenshot import get_stocks, get_prices
 import time
