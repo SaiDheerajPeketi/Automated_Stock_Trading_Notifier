@@ -36,6 +36,7 @@ except Exception as e:
     print("Failed to fill Previous Stocks ", e)
 
 while True:
+    tele_list = []
     # time.sleep(5)
     get_stocks()
     get_prices()
@@ -78,6 +79,7 @@ while True:
                         print(f"BUY {item} at {curr_price}")
                         out_list = [str(time.strftime("%Y-%m-%d %H:%M:%S")), "BUY", str(item), str(curr_price),
                                     str(curr_price)]
+                        tele_list.append(out_list)
                         # thread = threading.Thread(target=out_list, args=(out_list))
                         # thread.start()
                         write_lists(out_list)
@@ -95,6 +97,7 @@ while True:
                             print(f"SELL {item} at {curr_price}")
                             out_list = [str(time.strftime("%Y-%m-%d %H:%M:%S")), "SELL", str(item),
                                         str(holdings[holding_index][1]), str(curr_price)]
+                            tele_list.append(out_list)
                             write_lists(out_list)
                             # thread = threading.Thread(target=out_list, args=(out_list))
                             # thread.start()
@@ -118,6 +121,7 @@ while True:
                     print(f"SELL {stock} at {lower_threshold}")
                     out_list = [str(time.strftime("%Y-%m-%d %H:%M:%S")), "SELL", str(item),
                                 str(holdings[holding_index][1]), str(lower_threshold)]
+                    tele_list.append(out_list)
                     write_lists(out_list)
                     # thread = threading.Thread(target=out_list, args=(out_list))
                     # thread.start()
@@ -140,3 +144,5 @@ while True:
         send_message(modified + new_stocks)
     modified.clear()
     new_stocks.clear()
+    tele_list.clear()
+    out_list.clear()
