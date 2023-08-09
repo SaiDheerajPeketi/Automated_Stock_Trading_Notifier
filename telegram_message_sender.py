@@ -1,57 +1,61 @@
-#UserName = @reklatSkcotS_bot
-from keys import TELEGRAM_BOT_API_KEY
-from telegram.ext import *
-import datetime
-def bot_responses(input_text):
-    user_message = str(input_text).lower()
+import telebot
+import threading
+import os
+import signal
+# import psutil
+import subprocess
+from keys import TELEGRAM_BOT_API_KEY,chat_ids
 
-    if user_message in ('hello','hi','sup'):
-        return "Hey! How's it going"
-
-    if user_message in ("who are you","who are you?"):
-        return "I am Invincible Bot"
-
-    return "I don't understand you."
-
-def start_command(update, context):
-    update.message.reply_text("Type something random to get started!!")
-
-def help_command(update, context):
-    update.message.reply_text("If you need help, you should ask Google for it")
-
-async def handle_message(update, context):
-    text = str(update.message.text).lower()
-    response = bot_responses(text)
-    print(response)
-    await update.message.reply_text(response)
-
-def error(update, context):
-    print(f"Update {update} caused error {context.error}")
+bot = telebot.TeleBot(TELEGRAM_BOT_API_KEY)
 
 
+@bot.message_handler(commands=['start'])
+def hello(message):
+    bot.send_message(message.chat.id, f"{message.chat.id} -> Add this to chat_ids")
 
-def main():
-    app = Application.builder().token(TELEGRAM_BOT_API_KEY).build()
 
-    app.add_handler(CommandHandler('start',start_command))
-    app.add_handler(CommandHandler('help', help_command))
+# @bot.message_handler(commands=['hibernate_now'])
+# def shutdown(message):
+#     bot.send_message(message.chat.id, "Hibernate Signal Sent")
+#     subprocess.run(["shutdown", "/h"])
+#     for process in psutil.process_iter(attrs=['pid', 'name']):
+#         if 'python' in process.info['name'].lower():
+#             os.kill(process.info['pid'], signal.SIGTERM)
 
-    app.add_handler(MessageHandler(filters.TEXT, handle_message))
 
-    app.add_error_handler(error)
+# @bot.message_handler(commands=['stop_code'])
+# def stop_code(message):
+#     bot.send_message(message.chat.id, "Stop Signal Sent")
+#     for process in psutil.process_iter(attrs=['pid', 'name']):
+#         if 'python' in process.info['name'].lower():
+#             os.kill(process.info['pid'], signal.SIGTERM)
 
-    app.run_polling(poll_interval=1)
 
+@bot.message_handler(commands=['help'])
+def help(message):
+    bot.send_message(message.chat.id, "/start\n/stop_code\n/hibernate_now")
+
+
+@bot.message_handler(commands=['trigger'])
+def trigger(text=''):
+    if not chat_ids or not text:
+        print("No chat IDs to send messages to.")
+        return
+
+    for chat_id in chat_ids:
+        bot.send_message(chat_id, f"{text}")
+
+
+def polling_thread():
+    bot.polling(none_stop=True, interval=1, timeout=20)
 
 if __name__ == "__main__":
-    print("Bot Started ...")
-    app = Application.builder().token(TELEGRAM_BOT_API_KEY).build()
+    #Use this to run the bot directly
+    bot.polling()
+else:
+    #Use this to call it from main function
+    polling_thread = threading.Thread(target=polling_thread)
+    polling_thread.daemon = True  # Set the thread as a daemon, so it will exit when the main program exits
+    polling_thread.start()
 
-    app.add_handler(CommandHandler('start', start_command))
-    app.add_handler(CommandHandler('help', help_command))
-
-    app.add_handler(MessageHandler(filters.TEXT, handle_message))
-
-    app.add_error_handler(error)
-
-    app.run_polling()
+print("Bot is now running in the background.")

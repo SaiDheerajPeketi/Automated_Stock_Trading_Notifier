@@ -5,3 +5,5 @@ pillow
 pynput
 pywhatkit
 python-telegram-bot
+telebot
+pyTelegramBotAPI
