@@ -4,6 +4,7 @@ import time
 from keys import lower_threshold, upper_threshold
 from email_sender import send_email
 from store import write_lists
+from telegram_message_sender import send_message
 import threading
 
 curr_stocks = []
@@ -134,3 +135,6 @@ while True:
         continue
     if len(modified) != 0 or len(new_stocks) != 0:
         send_email(modified + new_stocks)
+        send_message(modified + new_stocks)
+    modified.clear()
+    new_stocks.clear()

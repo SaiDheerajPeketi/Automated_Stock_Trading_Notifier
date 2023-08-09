@@ -7,6 +7,8 @@ import subprocess
 from keys import TELEGRAM_BOT_API_KEY,chat_ids
 
 bot = telebot.TeleBot(TELEGRAM_BOT_API_KEY)
+def send_message(out_list):
+    trigger(str(out_list))
 
 
 @bot.message_handler(commands=['start'])
