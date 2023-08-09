@@ -95,7 +95,7 @@ while True:
                     print("Buy Sell Conditions", e)
                     continue
         except Exception as e:
-            print("")
+            print("Buy Sell and Get Holdings ",e)
             continue
         try:
             modified = []
