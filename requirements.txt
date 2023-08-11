@@ -7,3 +7,5 @@ pywhatkit
 python-telegram-bot
 telebot
 pyTelegramBotAPI
+python-windscribe
+pandas

@@ -1,18 +1,6 @@
 from pynput.mouse import Listener
 
 
-def get_region_coordinates():
-    global x1, y1, x2, y2, x3, y3, x4, y4
-    with open('coordinates.txt', 'r') as file:
-        line = file.readline().strip()
-
-    coordinates = list(map(int, line.split()))
-
-    if len(coordinates) == 8:
-        x1, y1, x2, y2, x3, y3, x4, y4 = coordinates
-    else:
-        print("Invalid number of coordinates.")
-
 flag = False
 temp = 0
 temp2 = 0
@@ -28,7 +16,7 @@ def on_right_click(x, y, button, pressed):
                 temp = x
                 temp2 = y
             else:
-                f.write(f"{x-temp} {y-temp2} ")
+                f.write(f"{x} {y} ")
                 print(f"Second-click at X: {x}, Y: {y}")
                 return False
         print(f"Right-click at X: {x}, Y: {y}")

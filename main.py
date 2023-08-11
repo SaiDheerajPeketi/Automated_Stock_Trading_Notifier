@@ -1,13 +1,45 @@
 # https://economictimes.indiatimes.com/marketstats/pid-1004,exchange-50,sortby-percentChange,sortorder-desc,indexid-13602,company-true,indexname-Nifty%20200.cms
 
 import easyocr
-from screenshot import get_stocks, get_prices
+from PIL import ImageGrab
 import time
 from keys import lower_threshold, upper_threshold
 from email_sender import send_email
 from store import write_lists
 from telegram_message_sender import send_message
 import threading
+
+x1, y1, x2, y2, x3, y3, x4, y4 = [0, 0, 0, 0, 0, 0, 0, 0]
+
+def get_region_coordinates():
+    global x1, y1, x2, y2, x3, y3, x4, y4
+    with open('coordinates.txt', 'r') as file:
+        line = file.readline().strip()
+
+    coordinates = list(map(int, line.split()))
+
+    if len(coordinates) == 8:
+        x1, y1, x2, y2, x3, y3, x4, y4 = coordinates
+    else:
+        print("Invalid number of coordinates.")
+
+
+get_region_coordinates()
+ss_region1 = (x1, y1, x2, y2)
+ss_region2 = (x3, y3, x4, y4)
+
+
+def get_stocks():
+    global ss_region1
+    myScreenshot = ImageGrab.grab(ss_region1)
+    myScreenshot.save("stocks.png")
+
+
+def get_prices():
+    global ss_region2
+    myScreenshot = ImageGrab.grab(ss_region2)
+    myScreenshot.save("prices.png")
+
 
 curr_stocks = []
 curr_prices = []
@@ -19,21 +51,36 @@ reader = easyocr.Reader(['en'])
 
 # time.sleep(5)
 new_stocks = []
-get_stocks()
-get_prices()
-stocks = reader.readtext("stocks.png")
-prices = reader.readtext("prices.png")
-try:
-    for item in stocks:
-        prev_stocks.append(item[1])
-    for item in prices:
-        prev_prices.append(float(item[1]))
-    if len(prices) != len(stocks):
-        raise Exception("Stocks size is not equal to Price size")
-    for i in range(0, len(prev_stocks)):
-        prev_stocks[i] = "".join(char if char.isalpha() or char.isspace() else "" for char in prev_stocks[i])
-except Exception as e:
-    print("Failed to fill Previous Stocks ", e)
+
+isFilled = False
+while not isFilled:
+    get_stocks()
+    get_prices()
+    stocks = reader.readtext("stocks.png")
+    prices = reader.readtext("prices.png")
+    try:
+        for item in stocks:
+            prev_stocks.append(item[1])
+        for item in prices:
+            prev_prices.append(str(item[1]))
+        for i in range(0, len(prev_prices)):
+            temp_price = ""
+            for char in prev_prices[i]:
+                if ('0' <= char <= '9') or char == '.':
+                    temp_price = temp_price + char
+                elif char == ',':
+                    temp_price = temp_price + "."
+                else:
+                    continue
+            prev_prices[i] = float(temp_price)
+
+        if len(prices) != len(stocks):
+            raise Exception("Stocks size is not equal to Price size")
+        for i in range(0, len(prev_stocks)):
+            prev_stocks[i] = "".join(char if char.isalpha() or char.isspace() else "" for char in prev_stocks[i])
+        isFilled = True
+    except Exception as e:
+        print("Failed to fill Previous Stocks ", e)
 
 while True:
     tele_list = []
@@ -140,9 +187,22 @@ while True:
         print("Infinite While ", e)
         continue
     if len(modified) != 0 or len(new_stocks) != 0:
-        send_email(modified + new_stocks)
-        send_message(modified + new_stocks)
+        try:
+            send_email(modified + new_stocks)
+
+        except Exception as e:
+            print("Notifier Error ", e)
+            try:
+                send_email(modified + new_stocks)
+
+            except Exception as e:
+                print("Email Notifier Error ", e)
+            try:
+                send_message(modified + new_stocks)
+
+            except Exception as e:
+                print("Telegram Notifier Error ", e)
+
     modified.clear()
     new_stocks.clear()
     tele_list.clear()
-    out_list.clear()
