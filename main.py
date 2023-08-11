@@ -8,6 +8,7 @@ from email_sender import send_email
 from store import write_lists
 from telegram_message_sender import send_message
 import threading
+from nifty_200_fetcher import handle_holdings
 
 x1, y1, x2, y2, x3, y3, x4, y4 = [0, 0, 0, 0, 0, 0, 0, 0]
 
@@ -116,7 +117,7 @@ while True:
                     print("Current Stocks Index ", e)
                     continue
                 try:
-                    if item not in curr_holdings and item not in prev_stocks:
+                    if item not in prev_stocks:
                         try:
                             curr_price = curr_prices[i]
                         except Exception as e:
@@ -133,76 +134,76 @@ while True:
                         holdings.append((item, curr_price, curr_price))
                         new_stocks.append(item)
 
-                    if item in curr_holdings:
-                        # print("Done")
-                        holding_index = curr_holdings.index(item)
-                        prev_price = holdings[holding_index][1]
-                        curr_price = curr_prices[i]
-                        print(item)
-                        if (curr_price - prev_price <= lower_threshold) or (
-                                curr_price - prev_price >= upper_threshold) or item not in curr_stocks:
-                            print(f"SELL {item} at {curr_price}")
-                            out_list = [str(time.strftime("%Y-%m-%d %H:%M:%S")), "SELL", str(item),
-                                        str(holdings[holding_index][1]), str(curr_price)]
-                            tele_list.append(out_list)
-                            write_lists(out_list)
-                            # thread = threading.Thread(target=out_list, args=(out_list))
-                            # thread.start()
-                            holdings.pop(holding_index)
-                            # del holdings[holding_index]
-                        else:
-                            # print(curr_stocks)
-                            holdings[holding_index] = (
-                                holdings[holding_index][0], holdings[holding_index][1], curr_price)
+                    # if item in curr_holdings:
+                    #     # print("Done")
+                    #     holding_index = curr_holdings.index(item)
+                    #     prev_price = holdings[holding_index][1]
+                    #     curr_price = curr_prices[i]
+                    #     print(item)
+                    #     if (curr_price - prev_price <= lower_threshold) or (
+                    #             curr_price - prev_price >= upper_threshold) or item not in curr_stocks:
+                    #         print(f"SELL {item} at {curr_price}")
+                    #         out_list = [str(time.strftime("%Y-%m-%d %H:%M:%S")), "SELL", str(item),
+                    #                     str(holdings[holding_index][1]), str(curr_price)]
+                    #         tele_list.append(out_list)
+                    #         write_lists(out_list)
+                    #         # thread = threading.Thread(target=out_list, args=(out_list))
+                    #         # thread.start()
+                    #         holdings.pop(holding_index)
+                    #         # del holdings[holding_index]
+                    #     else:
+                    #         # print(curr_stocks)
+                    #         holdings[holding_index] = (
+                    #             holdings[holding_index][0], holdings[holding_index][1], curr_price)
                 except Exception as e:
                     print("Buy Sell Conditions", e)
                     continue
+            holdings = handle_holdings(holdings)
         except Exception as e:
             print("Buy Sell and Get Holdings ", e)
             continue
-        try:
-            modified = []
-            for i in range(0, len(holdings)):
-                stock = holdings[i][0]
-                if stock not in curr_stocks:
-                    print(f"SELL {stock} at {lower_threshold}")
-                    out_list = [str(time.strftime("%Y-%m-%d %H:%M:%S")), "SELL", str(item),
-                                str(holdings[holding_index][1]), str(lower_threshold)]
-                    tele_list.append(out_list)
-                    write_lists(out_list)
-                    # thread = threading.Thread(target=out_list, args=(out_list))
-                    # thread.start()
-                    modified.append(stock)
-            for stock in modified:
-                curr_holdings = [item[0] for item in holdings]
-                index = curr_holdings.index(stock)
-                holdings.pop(index)
-            print(holdings)
-            prev_stocks = curr_stocks
-            prev_prices = curr_prices
-        except Exception as e:
-            print("Removing from Holdings ", e)
-            continue
+        # try:
+        #     modified = []
+        #     for i in range(0, len(holdings)):
+        #         stock = holdings[i][0]
+        #         if stock not in curr_stocks:
+        #             print(f"SELL {stock} at {lower_threshold}")
+        #             out_list = [str(time.strftime("%Y-%m-%d %H:%M:%S")), "SELL", str(item),
+        #                         str(holdings[holding_index][1]), str(lower_threshold)]
+        #             tele_list.append(out_list)
+        #             write_lists(out_list)
+        #             # thread = threading.Thread(target=out_list, args=(out_list))
+        #             # thread.start()
+        #             modified.append(stock)
+        #     for stock in modified:
+        #         curr_holdings = [item[0] for item in holdings]
+        #         index = curr_holdings.index(stock)
+        #         holdings.pop(index)
+        #     print(holdings)
+        #     prev_stocks = curr_stocks
+        #     prev_prices = curr_prices
+        # except Exception as e:
+        #     print("Removing from Holdings ", e)
+        #     continue
     except Exception as e:
         print("Infinite While ", e)
         continue
-    if len(modified) != 0 or len(new_stocks) != 0:
+    if len(new_stocks) != 0:
         try:
-            send_email(modified + new_stocks)
+            send_email(new_stocks)
 
         except Exception as e:
             print("Notifier Error ", e)
             try:
-                send_email(modified + new_stocks)
+                send_email(new_stocks)
 
             except Exception as e:
                 print("Email Notifier Error ", e)
             try:
-                send_message(modified + new_stocks)
+                send_message(new_stocks)
 
             except Exception as e:
                 print("Telegram Notifier Error ", e)
 
-    modified.clear()
     new_stocks.clear()
     tele_list.clear()

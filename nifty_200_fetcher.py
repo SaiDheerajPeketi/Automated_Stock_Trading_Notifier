@@ -19,14 +19,31 @@ def get_json():
     parse_json = json.loads(data)
     return parse_json
 
+
 def get_data(stock_name, parse_json):
-    stocks = parse_json.get("data",[])
+    stocks = parse_json.get("data", [])
     return stocks
     # for stock in stocks:
     #     if stock.get("identifier") == stock_name:
     #         print(stock)
     #         break
 
+
+def handle_holdings(curr_holdings):
+    if len(curr_holdings) == 0:
+        return []
+    parse_json = get_json()
+    stocks = parse_json.get("data", [])
+    next_holdings = []
+    holdings = [item[0] for item in curr_holdings]
+    for stock in stocks:
+        if stock.get("identifier") in holdings:
+            ind = holdings.index(stock.get("identifier"))
+            next_holdings.append((curr_holdings[ind][0], curr_holdings[ind][1], stock.get("lastPrice")))
+    return next_holdings
+
 if __name__ == "__main__":
     parse_json = get_json()
-    print(get_data("ZEELEQN", parse_json))
+    holdings = [("RECLTDEQN", 216.6, 216.6), ("IPCALABEQN", 900.85,901.86)]
+    res = handle_holdings(holdings)
+    print(res)
