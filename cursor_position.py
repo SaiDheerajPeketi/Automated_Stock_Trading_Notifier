@@ -1,6 +1,5 @@
 from pynput.mouse import Listener
 
-
 flag = False
 temp = 0
 temp2 = 0

@@ -39,11 +39,28 @@ def handle_holdings(curr_holdings):
     for stock in stocks:
         if stock.get("identifier") in holdings:
             ind = holdings.index(stock.get("identifier"))
-            next_holdings.append((curr_holdings[ind][0], curr_holdings[ind][1], stock.get("lastPrice")))
+            next_holdings.append((curr_holdings[ind][0], curr_holdings[ind][1], float(stock.get("lastPrice"))))
     return next_holdings
+
+
+def handle_window(n):
+    parse_json = get_json()
+    stocks = parse_json.get("data", [])
+    curr_stocks = []
+    curr_prices = []
+    isFirst = False
+    for stock in stocks:
+        if n < 0:
+            break
+        if isFirst:
+            curr_stocks.append(stock.get("identifier"))
+            curr_prices.append(stock.get("pChange"))
+            n -= 1
+        isFirst = True
+    return [curr_stocks, curr_prices]
 
 if __name__ == "__main__":
     parse_json = get_json()
-    holdings = [("RECLTDEQN", 216.6, 216.6), ("IPCALABEQN", 900.85,901.86)]
+    holdings = [("RECLTDEQN", 216.6, 216.6), ("IPCALABEQN", 900.85, 901.86)]
     res = handle_holdings(holdings)
-    print(res)
+    print(parse_json)
