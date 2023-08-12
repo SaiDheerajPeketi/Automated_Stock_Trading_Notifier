@@ -73,7 +73,7 @@ while True:
                                     str(curr_price)]
                         buy_list.append(out_list)
                         write_lists(out_list)
-                        holdings.append((item, curr_price, curr_price))
+                        holdings.append((item, curr_price, curr_price, curr_price))
                 except Exception as e:
                     logging.error(f"Buy Condition : {e}")
                     traceback.print_exc()
@@ -81,10 +81,10 @@ while True:
             holdings = handle_holdings(holdings)
             del_hold = []
             for holding in holdings:
-                if (holding[2] - holding[1] <= lower_threshold) or (holding[2] - holding[1] >= upper_threshold):
+                if (holding[3] - holding[2] <= lower_threshold) or (holding[3] - holding[2] >= upper_threshold):
                     print(f"SELL {item} at {curr_price}")
                     out_list = [str(time.strftime("%Y-%m-%d %H:%M:%S")), "SELL", str(holding[0]), str(holding[1]),
-                                str(holding[2])]
+                                str(holding[2]), str(holding[3])]
                     write_lists(out_list)
                     sell_list.append(out_list)
                     del_hold.append(holding)
@@ -101,6 +101,8 @@ while True:
         continue
     prev_stocks = curr_stocks
     prev_prices = curr_prices
+    send_message(curr_stocks)
+    send_message(curr_prices)
     if len(buy_list) != 0 or len(sell_list) != 0:
         try:
             send_email(buy_list + sell_list)
@@ -108,7 +110,7 @@ while True:
             logging.error(f"Email Notifier Error : {e}")
             traceback.print_exc()
         try:
-            send_message(new_stocks)
+            send_message(buy_list + sell_list)
         except Exception as e:
             logging.error(f"Telegram Notifier Error : {e}")
             traceback.print_exc()

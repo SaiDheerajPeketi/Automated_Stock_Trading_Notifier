@@ -16,6 +16,7 @@ def send_message(out_lists):
         print(out_list)
         trigger(str(out_list))
 
+
 @bot.message_handler(
     func=lambda message: message.chat.id in authenticated_users and not authenticated_users[message.chat.id])
 def check_password(message):
@@ -47,15 +48,12 @@ def check_password(message):
         bot.send_message(message.chat.id, "Incorrect password. Please try again.")
 
 
-
-
 @bot.message_handler(commands=['start'])
 def hello(message):
     bot.send_message(message.chat.id, f"<b>Commands</b>\n/stop_code - terminates the program on the "
                                       f"server\n/hibernate - terminates the program and hibernates the serve"
                                       f"r\n/help - prints this message\n\n{message.chat.id} -> Add this to "
                                       f"chat_ids\n\n", parse_mode="HTML")
-
 
 
 def shutdown(message):
@@ -82,7 +80,6 @@ def request_password(message):
     flag = "stop_code"
 
 
-
 @bot.message_handler(commands=['help'])
 def help(message):
     bot.send_message(message.chat.id, "<b>Commands</b>\n/stop_code - terminates the program on the server\n/hibernate "
@@ -99,7 +96,8 @@ def trigger(text=""):
     for chat_id in chat_ids:
         bot.send_message(chat_id, f"{text}")
 
-@bot.message_handler(func=lambda message:True)
+
+@bot.message_handler(func=lambda message: True)
 def handle_other_messages(message):
     bot.send_message(message.chat.id, "Unknown command. Here are the available commands:\n"
                                       "/stop_code - terminates the program on the server\n"

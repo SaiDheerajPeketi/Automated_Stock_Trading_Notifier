@@ -39,7 +39,9 @@ def handle_holdings(curr_holdings):
     for stock in stocks:
         if stock.get("identifier") in holdings:
             ind = holdings.index(stock.get("identifier"))
-            next_holdings.append((curr_holdings[ind][0], curr_holdings[ind][1], float(stock.get("lastPrice"))))
+            curr_price = float(stock.get("lastPrice"))
+            next_holdings.append(
+                (curr_holdings[ind][0], curr_holdings[ind][1], curr_price, max(curr_price, curr_holdings[ind][3])))
     return next_holdings
 
 
@@ -58,6 +60,7 @@ def handle_window(n):
             n -= 1
         isFirst = True
     return [curr_stocks, curr_prices]
+
 
 if __name__ == "__main__":
     parse_json = get_json()
